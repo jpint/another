@@ -67,6 +67,31 @@ html { height:100%;}
     line-height: 18px;
     margin: 0;
 }
+.legend2 {
+    line-height: 18px;
+    color: #333333;
+    font-family: 'Open Sans', Helvetica, sans-serif;
+    padding: 6px 8px;
+    background: white;
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+
+.legend2 i {
+    width: 28px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+}
+
+
+.legend2 p {
+    font-size: 12px;
+    line-height: 18px;
+    margin: 0;
+}
 
 
 
@@ -128,9 +153,7 @@ $.getJSON("data/agri2045.geojson",function(data){
     var overlayLayer = {
             "2015 Current Land Use": neighborhoodsLayer,
             "Predicted Farmland Loss":ConversionLayer,
-            "Areas of Interest": concernsLayer,
-            // "Farmland in 2015" : farmland2015Layer,
-            // "Farmland in 2045": farmland2045Layer
+            "Areas of Interest": concernsLayer
              };
 
             L.control.layers(baseMaps, overlayLayer).addTo(map);
@@ -326,19 +349,6 @@ legend2.onAdd = function (ConversionLayer) {
 // Add Legend to Map
 legend2.addTo(ConversionLayer);
 
-
-// // Create an Empty Popup
-// var popup = L.popup();
-// // Write function to set Properties of the Popup
-// function onMapClick(e) {
-//     popup
-//         .setLatLng(e.latlng)
-//         .setContent("You clicked the map at " + e.Label_C.toString())
-//         .openOn(map);
-// }
-
-// // Listen for a click event on the Map element
-// map.on('click', onMapClick);
     </script>
 </body>
 </html>
