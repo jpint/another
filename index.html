@@ -85,13 +85,16 @@ html { height:100%;}
     	map.doubleClickZoom.disable();
 
 
-// add point marker
-var myDataPoint = L.marker([29.749907, -95.358421]).addTo(map);
-        myDataPoint.bindPopup("Point of interest.");
-        myDataPoint.bindPopup("<p>Texas, USA</p>");
-        
-        var sugarland = L.marker([29.619678, -95.634949]);
-        var tomball = L.marker([30.097191, -95.616203]);
+// add point markers for conversion layer
+    var Friendswood = L.marker([29.492672, -95.175929]);
+        Friendswood.bindPopup("Point of interest.");
+        Friendswood.bindPopup("<p>Friendswood,TX</p>");    
+    var Plantersville = L.marker([30.235268, -95.813960]);
+        Plantersville.bindPopup("Point of interest.");
+        Plantersville.bindPopup("<p>Plantersville,TX</p>");
+    var Austin = L.marker([29.924052, -96.495184]);
+        Austin.bindPopup("Point of interest.");
+        Austin.bindPopup("<p>Austin County,TX</p>");
 
 
  // load GeoJSON from an external file
@@ -103,29 +106,29 @@ $.getJSON("data/tx_limit.geojson",function(data){
     }).addTo(map);
 
 
+     // load GeoJSON from an external file
+var farmland2015Layer = null;
+$.getJSON("data/agri2015.geojson",function(data){
+    ConversionLayer = L.geoJson(data, {
+        style: styleFunc2,
+        onEachFeature: usefunc2
+    }).addTo(map);
+});
 
-//      // load GeoJSON from an external file
-// var farmland2015Layer = null;
-// $.getJSON("data/agri2015.geojson",function(data){
-//     neighborhoodsLayer = L.geoJson(data, {
-//         style: styleFunc2,
-//         onEachFeature: usefunc2
-//     }).addTo(map);
-// });
-
-//   // load GeoJSON from an external file
-//   var farmland2045Layer = null;
-// $.getJSON("data/agri2045.geojson",function(data){
-//     neighborhoodsLayer = L.geoJson(data, {
-//         style: styleFunc3,
-//         onEachFeature: usefunc3
-//     }).addTo(map);
-// });
+  // load GeoJSON from an external file
+  var farmland2045Layer = null;
+$.getJSON("data/agri2045.geojson",function(data){
+    ConversionLayer = L.geoJson(data, {
+        style: styleFunc2,
+        onEachFeature: usefunc2
+    }).addTo(map);
+});
 
 
     var overlayLayer = {
             "2015 Current Land Use": neighborhoodsLayer,
-            "Areas of Interest": concerns,
+            "Predicted Farmland Loss":ConversionLayer,
+            "Areas of Interest": concernsLayer,
             // "Farmland in 2015" : farmland2015Layer,
             // "Farmland in 2045": farmland2045Layer
              };
@@ -134,9 +137,9 @@ $.getJSON("data/tx_limit.geojson",function(data){
 
         });
 
-    var concerns = L.layerGroup([sugarland, tomball]);
-    var universityLayer = {
-    "Areas of Interest": concerns
+    var concernsLayer = L.layerGroup([Austin, Plantersville, Friendswood]);
+    var PinPointsLayer = {
+    "Areas of Interest": concernsLayer
 };
 
 
@@ -167,6 +170,27 @@ function setColorFunc(Label_Curr){
     Label_Curr = 'Vacant Developable (includes Farming)' ? '#b2df8a' :
                          '#DFDEE1';
 };
+
+
+// Set style function that sets fill color property equal to blood lead
+function styleFunc2(feature) {
+    return {
+        fillColor: setColorFunc2(feature.properties.Current_La, Land_use_2),
+        fillOpacity: 0.9,
+        weight: 1,
+        opacity: 1,
+        color: '#ffffff',
+        dashArray: '3'
+    };
+}
+
+// Set function for color ramp, you can use a better palette
+function setColorFunc2(Current_La, Land_use_2){
+    return Current_La = 'Vacant Developable (includes Farming) 2015' ? '#E22C05' :
+    Land_use_2 = 'Vacant Developable (includes Farming) 2045' ? '#02832B':
+                         '#DFDEE1';
+};
+
 
 
 
@@ -208,6 +232,44 @@ function zoomFeature(e){
     map.fitBounds(e.target.getBounds().pad(1.5));
 }
 
+function usefunc2(feature, layer){
+    layer.on({
+        mouseover: highlightFeature2,
+        mouseout: resetHighlight2,
+        click: zoomFeature2
+    });
+    layer.bindPopup('2015 land use is: '+feature.properties.Current_La, Land_use_2);
+}
+
+
+function highlightFeature2(e){
+    var layer = e.target;
+
+    layer.setStyle({
+        weight: 5,
+        color: '#666',
+        dashArray: '',
+        fillOpacity: 0.7
+    });
+    // for different web browsers
+    if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+        layer.bringToFront();
+    }
+}
+
+// Define what happens on mouseout:
+function resetHighlight2(e) {
+    ConversionLayer.resetStyle(e.target);
+}  
+
+
+// As an additional touch, let’s define a click listener that zooms to the block: 
+function zoomFeature2(e){
+    console.log(e.target.getBounds());
+    map.fitBounds(e.target.getBounds().pad(1.5));
+}
+
+
 // Add Scale Bar to Map
 L.control.scale({position: 'bottomleft'}).addTo(map);
 
@@ -242,36 +304,41 @@ legend.onAdd = function (map) {
 // Add Legend to Map
 legend.addTo(map);
 
-// Create an Empty Popup
-var popup = L.popup();
-// Write function to set Properties of the Popup
-function onMapClick(e) {
-    popup
-        .setLatLng(e.latlng)
-        .setContent("You clicked the map at " + e.Label_C.toString())
-        .openOn(map);
-}
 
-// Listen for a click event on the Map element
-map.on('click', onMapClick);
+// Create Leaflet Control Object for Legend
+var legend2 = L.control({position: 'bottomright'});
 
-
+// Function that runs when legend is added to map
+legend2.onAdd = function (ConversionLayer) {
+    // Create Div Element and Populate it with HTML
+    var div = L.DomUtil.create('div', 'legend');            
+    div.innerHTML += '<i style="background: #E22C05"></i><p>Vacant Developable (includes Farming) 2015</p>';
+    div.innerHTML += '<i style="background: #02832B"></i><p>Vacant Developable (includes Farming) 2045</p>';
+    div.innerHTML += '<hr>';
+    div.innerHTML += '<i style="background: #DFDEE1"></i><p>No Data</p>';
 
 
 
+    // Return the Legend div containing the HTML content
+    return div;
+};
+
+// Add Legend to Map
+legend2.addTo(ConversionLayer);
 
 
+// // Create an Empty Popup
+// var popup = L.popup();
+// // Write function to set Properties of the Popup
+// function onMapClick(e) {
+//     popup
+//         .setLatLng(e.latlng)
+//         .setContent("You clicked the map at " + e.Label_C.toString())
+//         .openOn(map);
+// }
 
-
-
-
-
-
-
-
-
-
-
+// // Listen for a click event on the Map element
+// map.on('click', onMapClick);
     </script>
 </body>
 </html>
