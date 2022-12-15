@@ -67,31 +67,6 @@ html { height:100%;}
     line-height: 18px;
     margin: 0;
 }
-.legend2 {
-    line-height: 18px;
-    color: #333333;
-    font-family: 'Open Sans', Helvetica, sans-serif;
-    padding: 6px 8px;
-    background: white;
-    background: rgba(255,255,255,0.8);
-    box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    border-radius: 5px;
-}
-
-.legend2 i {
-    width: 28px;
-    height: 18px;
-    float: left;
-    margin-right: 8px;
-    opacity: 0.7;
-}
-
-
-.legend2 p {
-    font-size: 12px;
-    line-height: 18px;
-    margin: 0;
-}
 
 
 
@@ -110,59 +85,38 @@ html { height:100%;}
     	map.doubleClickZoom.disable();
 
 
-// add point markers for conversion layer
-    var Friendswood = L.marker([29.492672, -95.175929]);
-        Friendswood.bindPopup("Point of interest.");
-        Friendswood.bindPopup("<p>Friendswood,TX</p>");    
-    var Plantersville = L.marker([30.235268, -95.813960]);
-        Plantersville.bindPopup("Point of interest.");
-        Plantersville.bindPopup("<p>Plantersville,TX</p>");
-    var Austin = L.marker([29.924052, -96.495184]);
-        Austin.bindPopup("Point of interest.");
-        Austin.bindPopup("<p>Austin County,TX</p>");
+// add point marker
+var myDataPoint = L.marker([29.749907, -95.358421]).addTo(map);
+        myDataPoint.bindPopup("Point of interest.");
+        myDataPoint.bindPopup("<p>Houston, Texas, USA</p>");
+var sugarland = L.marker([29.619678, -95.634949]).addTo(map);
+        sugarland.bindPopup("Point of interest.");
+        sugarland.bindPopup("<p>Sugarland, Texas, USA</p>");
+var tomball = L.marker([30.097191, -95.616203]).addTo(map);
+        tomball.bindPopup("Point of interest.");
+        tomball.bindPopup("<p>Tomball, Texas, USA</p>");
 
 
  // load GeoJSON from an external file
 var neighborhoodsLayer = null;
-$.getJSON("data/tx_limit.geojson",function(data){
+$.getJSON("hgavlimit.geojson",function(data){
     neighborhoodsLayer = L.geoJson(data, {
         style: styleFunc,
         onEachFeature: usefunc
     }).addTo(map);
-
-
-     // load GeoJSON from an external file
-var farmland2015Layer = null;
-$.getJSON("data/agri2015.geojson",function(data){
-    ConversionLayer = L.geoJson(data, {
-        style: styleFunc2,
-        onEachFeature: usefunc2
-    }).addTo(map);
-});
-
-  // load GeoJSON from an external file
-  var farmland2045Layer = null;
-$.getJSON("data/agri2045.geojson",function(data){
-    ConversionLayer = L.geoJson(data, {
-        style: styleFunc2,
-        onEachFeature: usefunc2
-    }).addTo(map);
-});
-
-
+    
     var overlayLayer = {
             "2015 Current Land Use": neighborhoodsLayer,
-            "Predicted Farmland Loss":ConversionLayer,
-            "Areas of Interest": concernsLayer
+            "Areas of Interest": concerns
              };
 
             L.control.layers(baseMaps, overlayLayer).addTo(map);
 
         });
 
-    var concernsLayer = L.layerGroup([Austin, Plantersville, Friendswood]);
-    var PinPointsLayer = {
-    "Areas of Interest": concernsLayer
+        var concerns = L.layerGroup([myDataPoint, sugarland, tomball]);
+var interestareas = {
+    "Areas of Interest": concerns
 };
 
 
@@ -193,28 +147,6 @@ function setColorFunc(Label_Curr){
     Label_Curr = 'Vacant Developable (includes Farming)' ? '#b2df8a' :
                          '#DFDEE1';
 };
-
-
-// Set style function that sets fill color property equal to blood lead
-function styleFunc2(feature) {
-    return {
-        fillColor: setColorFunc2(feature.properties.Current_La, Land_use_2),
-        fillOpacity: 0.9,
-        weight: 1,
-        opacity: 1,
-        color: '#ffffff',
-        dashArray: '3'
-    };
-}
-
-// Set function for color ramp, you can use a better palette
-function setColorFunc2(Current_La, Land_use_2){
-    return Current_La = 'Vacant Developable (includes Farming) 2015' ? '#E22C05' :
-    Land_use_2 = 'Vacant Developable (includes Farming) 2045' ? '#02832B':
-                         '#DFDEE1';
-};
-
-
 
 
 // Now we’ll use the onEachFeature option to add the listeners on our state layers:
@@ -255,44 +187,6 @@ function zoomFeature(e){
     map.fitBounds(e.target.getBounds().pad(1.5));
 }
 
-function usefunc2(feature, layer){
-    layer.on({
-        mouseover: highlightFeature2,
-        mouseout: resetHighlight2,
-        click: zoomFeature2
-    });
-    layer.bindPopup('2015 land use is: '+feature.properties.Current_La, Land_use_2);
-}
-
-
-function highlightFeature2(e){
-    var layer = e.target;
-
-    layer.setStyle({
-        weight: 5,
-        color: '#666',
-        dashArray: '',
-        fillOpacity: 0.7
-    });
-    // for different web browsers
-    if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
-        layer.bringToFront();
-    }
-}
-
-// Define what happens on mouseout:
-function resetHighlight2(e) {
-    ConversionLayer.resetStyle(e.target);
-}  
-
-
-// As an additional touch, let’s define a click listener that zooms to the block: 
-function zoomFeature2(e){
-    console.log(e.target.getBounds());
-    map.fitBounds(e.target.getBounds().pad(1.5));
-}
-
-
 // Add Scale Bar to Map
 L.control.scale({position: 'bottomleft'}).addTo(map);
 
@@ -327,27 +221,19 @@ legend.onAdd = function (map) {
 // Add Legend to Map
 legend.addTo(map);
 
+// Create an Empty Popup
+var popup = L.popup();
+// Write function to set Properties of the Popup
+function onMapClick(e) {
+    popup
+        .setLatLng(e.latlng)
+        .setContent("You clicked the map at " + e.Label_C.toString())
+        .openOn(map);
+}
 
-// Create Leaflet Control Object for Legend
-var legend2 = L.control({position: 'bottomright'});
+// Listen for a click event on the Map element
+map.on('click', onMapClick);
 
-// Function that runs when legend is added to map
-legend2.onAdd = function (ConversionLayer) {
-    // Create Div Element and Populate it with HTML
-    var div = L.DomUtil.create('div', 'legend');            
-    div.innerHTML += '<i style="background: #E22C05"></i><p>Vacant Developable (includes Farming) 2015</p>';
-    div.innerHTML += '<i style="background: #02832B"></i><p>Vacant Developable (includes Farming) 2045</p>';
-    div.innerHTML += '<hr>';
-    div.innerHTML += '<i style="background: #DFDEE1"></i><p>No Data</p>';
-
-
-
-    // Return the Legend div containing the HTML content
-    return div;
-};
-
-// Add Legend to Map
-legend2.addTo(ConversionLayer);
 
     </script>
 </body>
